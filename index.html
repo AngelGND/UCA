@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GND — Plan de Estudios</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:#F5F5F5;
+  color:#111;
+  max-width:430px;
+  margin:0 auto;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+}
+
+/* HEADER */
+.app-header{
+  background:#fff;
+  padding:16px 20px 0;
+  border-bottom:1px solid #E8E8E8;
+  position:relative;
+  z-index:10;
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.header-wordmark{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.14em;
+  color:#111;
+  text-transform:uppercase;
+}
+.header-sub{
+  font-size:10px;
+  color:#888;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  margin-top:1px;
+}
+.header-badge{
+  font-size:10px;
+  font-weight:600;
+  color:#fff;
+  background:#111;
+  padding:3px 8px;
+  border-radius:20px;
+  letter-spacing:.04em;
+}
+
+/* YEAR TABS */
+.year-tabs{
+  display:flex;
+  gap:0;
+  border-bottom:none;
+  margin-bottom:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.year-tabs::-webkit-scrollbar{display:none}
+.yr-btn{
+  flex:1;
+  min-width:70px;
+  padding:10px 4px 12px;
+  font-size:12px;
+  font-weight:600;
+  color:#999;
+  background:none;
+  border:none;
+  cursor:pointer;
+  position:relative;
+  letter-spacing:.02em;
+  transition:color .15s;
+  white-space:nowrap;
+}
+.yr-btn.active{color:#111}
+.yr-btn.active::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:50%;
+  transform:translateX(-50%);
+  width:24px;height:2px;
+  background:#111;
+  border-radius:2px 2px 0 0;
+}
+
+/* MAIN SCROLL */
+.main-scroll{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:16px 16px 120px;
+  height:calc(100vh - 120px);
+}
+
+/* SEMESTER SECTION */
+.sem-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+  margin-top:4px;
+}
+.sem-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:#999;
+}
+.sem-line{flex:1;height:1px;background:#E8E8E8}
+
+/* SUBJECT CARDS */
+.cards-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:20px;
+}
+.s-card{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  cursor:pointer;
+  transition:transform .1s, box-shadow .1s;
+  border:1.5px solid transparent;
+  min-height:86px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.s-card:active{transform:scale(0.97)}
+.s-card.selected{border-color:#111;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.s-card.dim{opacity:.22}
+.s-card.hi-req{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.s-card.hi-aprob{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+.s-card.hi-unlocks{border-color:#F59E0B;box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+
+.s-card-accent{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  border-radius:14px 14px 0 0;
+}
+.s-card-name{
+  font-size:12px;
+  font-weight:600;
+  color:#111;
+  line-height:1.3;
+  margin-top:6px;
+  padding-right:4px;
+}
+.s-card-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:8px;
+}
+.s-card-ref{
+  font-size:10px;
+  font-weight:700;
+  color:#bbb;
+  letter-spacing:.04em;
+}
+.s-card-hs{
+  font-size:10px;
+  color:#bbb;
+  display:flex;
+  align-items:center;
+  gap:3px;
+}
+.s-card-hs i{font-size:11px}
+
+/* highlight dots on cards */
+.s-card .hi-dot{
+  position:absolute;
+  top:8px;right:8px;
+  width:8px;height:8px;
+  border-radius:50%;
+  display:none;
+}
+.s-card.hi-req .hi-dot{display:block;background:#3B82F6}
+.s-card.hi-aprob .hi-dot{display:block;background:#10B981}
+.s-card.hi-unlocks .hi-dot{display:block;background:#F59E0B}
+.s-card.selected .hi-dot{display:none}
+
+/* BOTTOM SHEET */
+.sheet-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  z-index:50;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s;
+}
+.sheet-overlay.open{opacity:1;pointer-events:all}
+
+.bottom-sheet{
+  position:fixed;
+  bottom:0;left:50%;
+  transform:translateX(-50%) translateY(100%);
+  width:100%;
+  max-width:430px;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  z-index:100;
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+  max-height:85vh;
+  display:flex;
+  flex-direction:column;
+}
+.bottom-sheet.open{transform:translateX(-50%) translateY(0)}
+
+.sheet-handle{
+  width:36px;height:4px;
+  background:#E0E0E0;
+  border-radius:2px;
+  margin:12px auto 0;
+  flex-shrink:0;
+}
+.sheet-header{
+  padding:16px 20px 12px;
+  border-bottom:1px solid #F0F0F0;
+  flex-shrink:0;
+  position:relative;
+}
+.sheet-accent-bar{
+  width:28px;height:3px;
+  border-radius:2px;
+  margin-bottom:10px;
+}
+.sheet-title{font-size:18px;font-weight:700;color:#111;line-height:1.2;padding-right:40px}
+.sheet-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+}
+.sheet-yr-badge{
+  font-size:10px;font-weight:700;
+  letter-spacing:.06em;
+  padding:3px 8px;
+  border-radius:20px;
+  color:#fff;
+  text-transform:uppercase;
+}
+.sheet-hs-badge{
+  font-size:10px;
+  color:#888;
+  display:flex;align-items:center;gap:3px;
+}
+.sheet-close{
+  position:absolute;
+  top:16px;right:16px;
+  width:28px;height:28px;
+  border-radius:50%;
+  background:#F5F5F5;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:#666;
+}
+
+.sheet-body{
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 20px 32px;
+  flex:1;
+}
+
+.corr-section{margin-top:16px}
+.corr-section-label{
+  display:flex;align-items:center;gap:7px;
+  font-size:10px;font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#999;
+  margin-bottom:8px;
+  padding-bottom:8px;
+  border-bottom:1px solid #F0F0F0;
+}
+.corr-section-label i{font-size:15px}
+
+.chips-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;font-weight:600;
+  line-height:1;
+}
+.chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chip-req{background:#EFF6FF;color:#1D4ED8}
+.chip-req .chip-dot{background:#3B82F6}
+.chip-aprob{background:#ECFDF5;color:#065F46}
+.chip-aprob .chip-dot{background:#10B981}
+.chip-unlock{background:#FFFBEB;color:#92400E}
+.chip-unlock .chip-dot{background:#F59E0B}
+.chip-none{font-size:12px;color:#bbb;font-style:italic;padding:4px 0}
+
+.cont-box{
+  background:#F8F8F8;
+  border-radius:10px;
+  padding:12px;
+  font-size:12px;
+  line-height:1.65;
+  color:#555;
+  margin-top:4px;
+}
+
+/* LEGEND FLOATING */
+.legend-pill{
+  position:fixed;
+  bottom:16px;left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:1px solid #E8E8E8;
+  border-radius:20px;
+  padding:8px 14px;
+  display:flex;gap:14px;
+  z-index:20;
+  box-shadow:0 2px 12px rgba(0,0,0,.1);
+  transition:opacity .2s, transform .2s;
+}
+.legend-pill.hidden{opacity:0;transform:translateX(-50%) translateY(10px);pointer-events:none}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#555;letter-spacing:.03em}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* EMPTY STATE */
+.empty-state{
+  text-align:center;
+  padding:40px 20px;
+  color:#999;
+}
+.empty-state i{font-size:32px;margin-bottom:12px;display:block;color:#CCC}
+.empty-state p{font-size:13px;line-height:1.5}
+
+/* YEAR PROGRESS BAR */
+.progress-row{
+  display:flex;
+  gap:3px;
+  padding:0 20px 14px;
+  background:#fff;
+}
+.prog-seg{
+  flex:1;height:3px;
+  border-radius:2px;
+  background:#E8E8E8;
+  transition:background .2s;
+}
+
+/* COLORS PER YEAR */
+:root{
+  --c1:#3C3489;--c2:#185FA5;--c3:#0F6E56;--c4:#993C1D;
+}
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media(min-width:600px){
+  body{max-width:900px;overflow:auto;height:auto}
+  .main-scroll{height:auto;padding-bottom:60px}
+  .bottom-sheet{
+    position:fixed;bottom:0;left:50%;
+    max-width:520px;
+    border-radius:20px 20px 0 0;
+  }
+  .cards-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(min-width:900px){
+  .cards-grid{grid-template-columns:repeat(4,1fr)}
+}
+
+/* ── SECCIÓN REGLAMENTO ─────────────────────── */
+.info-section{padding:16px 16px 0}
+.info-toggle{
+  width:100%;display:flex;align-items:center;
+  background:none;border:none;cursor:pointer;padding:0;margin-bottom:10px;gap:8px;
+}
+.info-section-title{
+  font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:#999;white-space:nowrap;
+}
+.info-toggle-line{flex:1;height:1px;background:#E8E8E8}
+.info-toggle-hint{
+  font-size:10px;color:#bbb;white-space:nowrap;display:flex;align-items:center;gap:3px;
+}
+.info-toggle-hint i{font-size:12px;transition:transform .25s cubic-bezier(.32,.72,0,1)}
+.info-section.open .info-toggle-hint i{transform:rotate(180deg)}
+
+.info-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .4s cubic-bezier(.32,.72,0,1);
+}
+.info-section.open .info-body{max-height:4000px}
+
+/* ── ACORDEONES ─────────────────────────────── */
+.accordion{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.acc-item{
+  background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.acc-trigger{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:none;border:none;cursor:pointer;text-align:left;gap:10px;
+}
+.acc-trigger-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.acc-icon{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.acc-label{font-size:12px;font-weight:600;color:#111;line-height:1.3}
+.acc-chevron{
+  font-size:15px;color:#ccc;flex-shrink:0;
+  transition:transform .25s cubic-bezier(.32,.72,0,1);
+}
+.acc-item.open .acc-chevron{transform:rotate(180deg)}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.32,.72,0,1)}
+.acc-inner{padding:12px 14px 14px;border-top:1px solid #F0F0F0}
+.acc-lead{font-size:11.5px;color:#555;line-height:1.65;margin-bottom:10px}
+.acc-list{display:flex;flex-direction:column;gap:6px}
+.acc-row{
+  display:flex;align-items:flex-start;gap:8px;
+  background:#F8F8F8;border-radius:9px;padding:9px 10px;
+}
+.acc-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.acc-text{font-size:11.5px;color:#444;line-height:1.55}
+.acc-text b{color:#111;font-weight:600}
+.acc-source{
+  font-size:10px;color:#bbb;margin-top:8px;padding-top:8px;
+  border-top:1px solid #F0F0F0;letter-spacing:.02em;
+}
+
+/* ── PROFESOR EN CARD ───────────────────────── */
+.s-card-prof{font-size:9.5px;color:#999;line-height:1.3;margin-top:4px;font-style:italic;}
+.s-card-prof.sin-dato{color:#ccc}
+
+/* ── PROFESOR EN SHEET ──────────────────────── */
+.sheet-prof-row{display:flex;align-items:flex-start;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.sheet-prof-label{font-size:11px;color:#aaa;font-weight:500;white-space:nowrap;}
+.sheet-prof-val{font-size:12px;color:#444;font-weight:500}
+.sheet-prof-val.sin-dato{color:#ccc;font-style:italic}
+
+/* ── SHEET EXTRA INFO ───────────────────────── */
+.sheet-extra-row{
+  display:flex;align-items:flex-start;gap:8px;
+  background:#F8F8F8;border-radius:9px;padding:9px 10px;margin-top:6px;
+}
+.sheet-extra-icon{font-size:14px;color:#aaa;flex-shrink:0;margin-top:1px}
+.sheet-extra-label{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#bbb;margin-bottom:2px}
+.sheet-extra-val{font-size:12px;color:#444;line-height:1.45}
+.sheet-extra-val.sin-dato{color:#ccc;font-style:italic}
+
+/* ── BOTÓN ADMIN FLOTANTE ───────────────────── */
+#admin-btn{
+  position:fixed;right:0;top:50%;transform:translateY(-50%);
+  z-index:200;background:#111;color:#fff;
+  border:none;cursor:pointer;padding:10px 6px;
+  border-radius:10px 0 0 10px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  box-shadow:-2px 2px 10px rgba(0,0,0,.15);transition:background .15s;
+}
+#admin-btn:hover{background:#333}
+#admin-btn i{font-size:16px}
+#admin-btn span{font-size:8px;font-weight:700;letter-spacing:.06em;writing-mode:vertical-rl;}
+
+/* ── OVERLAY ADMIN ──────────────────────────── */
+#admin-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:300;opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#admin-overlay.open{opacity:1;pointer-events:all}
+
+/* ── PANEL ADMIN ────────────────────────────── */
+#admin-panel{
+  position:fixed;right:0;top:0;bottom:0;width:min(380px,100vw);
+  background:#fff;z-index:400;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+  box-shadow:-4px 0 24px rgba(0,0,0,.12);
+}
+#admin-panel.open{transform:translateX(0)}
+
+.admin-header{
+  padding:18px 18px 14px;border-bottom:1px solid #F0F0F0;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.admin-title{font-size:15px;font-weight:700;color:#111}
+.admin-subtitle{font-size:10px;color:#aaa;letter-spacing:.04em;margin-top:1px}
+.admin-close{
+  width:28px;height:28px;border-radius:50%;background:#F5F5F5;
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:#666;
+}
+#admin-login{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;
+}
+.login-icon{
+  width:52px;height:52px;border-radius:14px;background:#F0F0F0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;color:#888;margin-bottom:4px;
+}
+.login-title{font-size:15px;font-weight:700;color:#111;text-align:center}
+.login-sub{font-size:12px;color:#aaa;text-align:center;line-height:1.5}
+.pin-input{
+  width:100%;max-width:200px;border:1.5px solid #E0E0E0;border-radius:12px;
+  padding:12px 16px;font-size:22px;font-weight:700;text-align:center;letter-spacing:.3em;
+  outline:none;transition:border-color .15s;
+}
+.pin-input:focus{border-color:#111}
+.pin-input.error{border-color:#EF4444;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.login-btn{
+  width:100%;max-width:200px;background:#111;color:#fff;border:none;border-radius:12px;
+  padding:12px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;
+}
+.login-btn:hover{background:#333}
+
+/* ── ADMIN CONTENT ──────────────────────────── */
+#admin-content{flex:1;display:none;flex-direction:column;overflow:hidden;position:relative;}
+#admin-content.visible{display:flex}
+
+/* Admin section tabs (Materias / Mesas / Horarios) */
+.admin-section-tabs{
+  display:flex;overflow-x:auto;gap:0;border-bottom:2px solid #F0F0F0;
+  flex-shrink:0;scrollbar-width:none;background:#fff;
+}
+.admin-section-tabs::-webkit-scrollbar{display:none}
+.admin-sec-tab{
+  flex:1;min-width:80px;padding:10px 6px;font-size:11px;font-weight:700;
+  color:#bbb;background:none;border:none;cursor:pointer;position:relative;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;transition:color .15s;
+}
+.admin-sec-tab.active{color:#111}
+.admin-sec-tab.active::after{
+  content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
+  width:28px;height:2px;background:#111;border-radius:2px 2px 0 0;
+}
+
+/* Year sub-tabs inside Materias */
+.admin-yr-tabs{
+  display:flex;overflow-x:auto;gap:0;border-bottom:1px solid #F0F0F0;
+  flex-shrink:0;scrollbar-width:none;background:#FAFAFA;
+}
+.admin-yr-tabs::-webkit-scrollbar{display:none}
+.admin-yr-tab{
+  flex-shrink:0;padding:8px 14px;font-size:11px;font-weight:600;
+  color:#999;background:none;border:none;cursor:pointer;position:relative;white-space:nowrap;
+}
+.admin-yr-tab.active{color:#111}
+.admin-yr-tab.active::after{
+  content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:18px;height:2px;background:#111;border-radius:2px 2px 0 0;
+}
+
+/* Scrollable list */
+.admin-mat-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 110px;}
+
+/* Card per subject in admin */
+.admin-mat-item{
+  background:#F8F8F8;border-radius:12px;padding:12px;margin-bottom:8px;
+  border:1.5px solid transparent;transition:border-color .15s;
+}
+.admin-mat-item:focus-within{border-color:#E0E0E0}
+.admin-mat-name{
+  font-size:12px;font-weight:600;color:#111;margin-bottom:10px;line-height:1.3;
+  display:flex;align-items:center;gap:6px;
+}
+.admin-mat-badge{
+  font-size:9px;font-weight:700;color:#fff;padding:2px 6px;border-radius:10px;flex-shrink:0;
+}
+.admin-field{margin-bottom:8px}
+.admin-field:last-child{margin-bottom:0}
+.admin-field-label{
+  font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:#aaa;margin-bottom:4px;display:flex;align-items:center;gap:4px;
+}
+.admin-field-label i{font-size:12px}
+.admin-input{
+  width:100%;border:1.5px solid #E8E8E8;border-radius:8px;
+  padding:8px 10px;font-size:12px;color:#111;background:#fff;
+  outline:none;transition:border-color .15s;font-family:inherit;resize:none;
+}
+.admin-input:focus{border-color:#111}
+.admin-input::placeholder{color:#ccc}
+
+/* Mesas section */
+.admin-mesa-section{margin-bottom:20px}
+.admin-mesa-section-title{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:#999;margin-bottom:8px;padding:0 2px;
+  display:flex;align-items:center;gap:6px;
+}
+.admin-mesa-section-title::after{content:'';flex:1;height:1px;background:#E8E8E8}
+.admin-mesa-item{
+  background:#F8F8F8;border-radius:12px;padding:12px;margin-bottom:8px;
+  border-left:3px solid #E0E0E0;
+}
+.admin-mesa-mat-name{font-size:11.5px;font-weight:600;color:#111;margin-bottom:8px}
+.admin-mesa-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.admin-mesa-row:last-child{margin-bottom:0}
+.admin-mini-label{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#bbb;margin-bottom:2px}
+.admin-mini-group{display:flex;flex-direction:column;flex:1;min-width:80px}
+.admin-input-sm{
+  border:1.5px solid #E8E8E8;border-radius:7px;
+  padding:6px 8px;font-size:11.5px;color:#111;background:#fff;
+  outline:none;transition:border-color .15s;font-family:inherit;width:100%;
+}
+.admin-input-sm:focus{border-color:#111}
+.admin-input-sm::placeholder{color:#ccc}
+
+/* Save bar */
+.admin-save-row{
+  padding:12px 14px;border-top:1px solid #F0F0F0;flex-shrink:0;display:flex;gap:8px;
+  position:absolute;bottom:0;left:0;right:0;background:#fff;z-index:10;
+}
+.admin-save-btn{
+  flex:1;background:#111;color:#fff;border:none;border-radius:10px;
+  padding:11px;font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.admin-save-btn:hover{background:#333}
+.admin-logout-btn{
+  background:#F5F5F5;color:#666;border:none;border-radius:10px;
+  padding:11px 14px;font-size:13px;cursor:pointer;transition:background .15s;
+}
+.admin-logout-btn:hover{background:#E8E8E8}
+
+/* Toast */
+.save-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#111;color:#fff;border-radius:20px;padding:8px 18px;
+  font-size:12px;font-weight:600;z-index:500;
+  opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;
+}
+.save-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── HORARIOS EN SHEET ───────────────────────── */
+.sheet-horario-block{
+  background:#F8F8F8;border-radius:9px;padding:9px 10px;margin-top:4px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.sheet-horario-row{display:flex;align-items:center;gap:7px;font-size:12px;color:#444}
+.sheet-horario-row i{font-size:13px;color:#888;flex-shrink:0}
+.sheet-horario-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#bbb;margin-bottom:2px}
+
+/* ── MESAS EN SHEET ─────────────────────────── */
+.sheet-mesas-grid{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.sheet-mesa-chip{
+  background:#FFFBEB;border-radius:8px;padding:7px 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.sheet-mesa-dot{width:6px;height:6px;border-radius:50%;background:#F59E0B;flex-shrink:0}
+.sheet-mesa-info{display:flex;flex-direction:column;gap:1px}
+.sheet-mesa-fecha{font-size:12px;font-weight:600;color:#111}
+.sheet-mesa-extra{font-size:10.5px;color:#888}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div>
+      <div class="header-wordmark">GND · UCA Mendoza</div>
+      <div class="header-sub">Lic. en Gestión de Negocios Digitales</div>
+    </div>
+    <div class="header-badge">4 años</div>
+  </div>
+
+  <div class="progress-row" id="progress-row">
+    <div class="prog-seg" data-yr="1"></div>
+    <div class="prog-seg" data-yr="2"></div>
+    <div class="prog-seg" data-yr="3"></div>
+    <div class="prog-seg" data-yr="4"></div>
+  </div>
+
+  <div class="year-tabs" id="yr-tabs"></div>
+</div>
+
+<div class="main-scroll" id="main-scroll">
+
+  <!-- SECCIÓN REGLAMENTO — cerrada por defecto -->
+  <div class="info-section" id="info-section">
+    <button class="info-toggle" onclick="toggleInfo()" aria-expanded="false">
+      <div class="info-section-title">Reglamento de Escolaridad</div>
+      <div class="info-toggle-line"></div>
+      <div class="info-toggle-hint">
+        <span>Ver</span>
+        <i class="ti ti-chevron-down"></i>
+      </div>
+    </button>
+    <div class="info-body" id="info-body">
+      <div class="accordion">
+
+        <!-- 1. Regularidad y asistencia -->
+        <div class="acc-item" id="acc-1">
+          <button class="acc-trigger" onclick="toggleAcc('acc-1')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#EEF2FF"><i class="ti ti-user-check" style="color:#3C3489"></i></div>
+              <div class="acc-label">Condición de Alumno Regular</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">La regularidad en una asignatura se obtiene cumpliendo simultáneamente asistencia mínima y aprobación de evaluaciones parciales.</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#3C3489"></div><div class="acc-text"><b>Asistencia mínima requerida:</b> 75% del total de clases teóricas, prácticas y otras actividades curriculares. Este requisito aplica también a quienes recursan.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#3C3489"></div><div class="acc-text"><b>Entre 50% y 75% de asistencia:</b> Se puede presentar una solicitud de justificación con documentación respaldatoria. Requiere aprobación del Director de Carrera con acuerdo de Secretaría Académica.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#3C3489"></div><div class="acc-text"><b>Inscripción a materias:</b> Requiere correlatividades al día y aranceles al día. Se realiza a través del Campus en los plazos del calendario académico.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#3C3489"></div><div class="acc-text"><b>Vigencia de la regularidad:</b> Se mantiene durante los 5 turnos de examen (cada turno tiene 2 llamados) posteriores a la finalización del curso. Vencidos, se pierde la regularidad y hay que recursar.</div></div>
+            </div>
+            <div class="acc-source">Art. 6°, 7°, 8° y 9° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25)</div>
+          </div></div>
+        </div>
+
+        <!-- 2. Evaluaciones parciales -->
+        <div class="acc-item" id="acc-2">
+          <button class="acc-trigger" onclick="toggleAcc('acc-2')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#F0F9FF"><i class="ti ti-writing" style="color:#185FA5"></i></div>
+              <div class="acc-label">Evaluaciones Parciales y Recuperatorios</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">Cada materia semestral tiene como mínimo dos instancias de evaluación parcial. El profesor debe informar la metodología y criterios durante la primera semana del semestre.</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#185FA5"></div><div class="acc-text"><b>Formato:</b> Orales o escritos según lo defina cada cátedra. Las evaluaciones escritas tienen una duración recomendada de una hora y media.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#185FA5"></div><div class="acc-text"><b>Recuperatorio:</b> El alumno que se ausente o desapruebe tiene derecho a una instancia recuperatoria por cada parcial desaprobado. Debe transcurrir un mínimo de 7 días corridos entre la notificación y el recuperatorio.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#185FA5"></div><div class="acc-text"><b>Inasistencia al parcial:</b> El alumno ausente será evaluado en la fecha del recuperatorio. Para que esa instancia cuente como primera evaluación, debe presentar certificado médico que acredite que su estado de salud le impedía rendir, o una nota de la Facultad que certifique superposición con otro parcial en la misma fecha.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#185FA5"></div><div class="acc-text"><b>Devolución:</b> Los resultados de parciales escritos deben estar disponibles en un plazo no mayor a 7 días corridos desde la evaluación.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#185FA5"></div><div class="acc-text"><b>Procedimiento fraudulento:</b> Implica ser retirado del examen y calificado con nota mínima, sin perjuicio de las sanciones disciplinarias correspondientes.</div></div>
+            </div>
+            <div class="acc-source">Art. 11° al 19° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25)</div>
+          </div></div>
+        </div>
+
+        <!-- 3. Examen final -->
+        <div class="acc-item" id="acc-3">
+          <button class="acc-trigger" onclick="toggleAcc('acc-3')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#FFFBEB"><i class="ti ti-calendar-event" style="color:#B45309"></i></div>
+              <div class="acc-label">Examen Final</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">Hay tres turnos de examen por año, cada uno con dos llamados: febrero–marzo, julio–agosto y noviembre–diciembre.</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#B45309"></div><div class="acc-text"><b>Inscripción:</b> Hasta 48 horas hábiles antes del examen, a través del campus virtual. Mismo plazo para darse de baja. No se incluyen alumnos en lista el mismo día del examen.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#B45309"></div><div class="acc-text"><b>Plazo para aprobar:</b> El examen final debe aprobarse en alguno de los 5 turnos posteriores a la finalización del curso. Vencidos, se pierde la regularidad y hay que recursar.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#B45309"></div><div class="acc-text"><b>Segundo llamado del mismo turno:</b> El alumno que reprueba o está ausente en el primer llamado <b>sí puede presentarse al segundo llamado del mismo turno.</b> El aplazo o ausente queda registrado en la ficha académica.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#B45309"></div><div class="acc-text"><b>Resultados y revisión:</b> Las notas se publican a los 4 días hábiles. Se puede solicitar revisión por escrito hasta el día 15 del mes siguiente al llamado (o hasta el 15 de febrero si el llamado fue en diciembre).</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#B45309"></div><div class="acc-text"><b>Mesas especiales:</b> Para quienes terminaron de cursar íntegramente el plan y adeudan hasta 5 finales. Si se pide una mesa y no se asiste, se pierde definitivamente el derecho a solicitar nuevas mesas especiales.</div></div>
+            </div>
+            <div class="acc-source">Art. 20° al 27° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25)</div>
+          </div></div>
+        </div>
+
+        <!-- 4. Causales de baja -->
+        <div class="acc-item" id="acc-4">
+          <button class="acc-trigger" onclick="toggleAcc('acc-4')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#FFF1F2"><i class="ti ti-alert-triangle" style="color:#BE123C"></i></div>
+              <div class="acc-label">Causales de Baja de la Carrera</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">Quedan automáticamente dados de baja los alumnos que incurran en cualquiera de estas situaciones, aplicables a materias del 1° año (en carreras de 4 años):</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#BE123C"></div><div class="acc-text">Obtener insuficiente <b>4 veces en el examen final de una misma asignatura.</b></div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#BE123C"></div><div class="acc-text">Obtener insuficiente <b>en 3 asignaturas distintas en un mismo turno de examen.</b></div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#BE123C"></div><div class="acc-text">Reprobar <b>la cursada de una asignatura por tercera vez.</b></div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#555"></div><div class="acc-text"><b>Reincorporación:</b> El alumno dado de baja puede solicitar reconsideración. El Decano nombrará una comisión integrada por el Director de Carrera y dos docentes para dictaminar. Si el informe es favorable, se fijan las pautas académicas a cumplir.</div></div>
+            </div>
+            <div class="acc-source">Art. 38° y 39° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25)</div>
+          </div></div>
+        </div>
+
+        <!-- 5. Correlatividades y N-2 -->
+        <div class="acc-item" id="acc-5">
+          <button class="acc-trigger" onclick="toggleAcc('acc-5')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#ECFDF5"><i class="ti ti-arrows-right-left" style="color:#0F6E56"></i></div>
+              <div class="acc-label">Correlatividades y Regla N-2</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">Las correlatividades establecen el orden obligatorio de cursado y rendición de finales. No se permiten excepciones para el examen final; las excepciones a la correlatividad de cursada son limitadas.</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#0F6E56"></div><div class="acc-text"><b>Regla N-2:</b> No es posible cursar materias de 3° año sin tener aprobados todos los finales de 1° año, ni materias de 4° año sin tener aprobados todos los finales de 2° año.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#0F6E56"></div><div class="acc-text"><b>En el mismo llamado</b> no pueden rendirse dos asignaturas correlativas entre sí.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#0F6E56"></div><div class="acc-text"><b>Plazo para 1° y 2° año:</b> Todos los finales de los dos primeros años deben aprobarse en un plazo no mayor a 4 años.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#0F6E56"></div><div class="acc-text"><b>Plazo total:</b> El plan debe completarse en no más del doble de los años previstos, es decir un máximo de 8 años para esta carrera.</div></div>
+            </div>
+            <div class="acc-source">Art. 28°, 35°, 36° y 37° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25)</div>
+          </div></div>
+        </div>
+
+        <!-- 6. Promoción -->
+        <div class="acc-item" id="acc-6">
+          <button class="acc-trigger" onclick="toggleAcc('acc-6')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#F5F3FF"><i class="ti ti-star" style="color:#7C3AED"></i></div>
+              <div class="acc-label">Sistema de Promoción y Premios</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">El Reglamento establece un sistema de promoción para ciertas asignaturas y un reconocimiento al mérito académico al momento de la graduación.</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#7C3AED"></div><div class="acc-text"><b>Asignaturas promocionables:</b> El Consejo Directivo establece cuáles materias aplican al sistema de promoción. No todas son promocionables.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#7C3AED"></div><div class="acc-text"><b>Medalla de Oro:</b> Para el alumno regular con el promedio más alto de su cohorte, siempre que: haya cursado todas las materias en la UCA, completado la carrera en el tiempo teórico, aprobado todos los finales antes del 31 de mayo del año siguiente a su graduación, no registre ningún aplazo, y tenga un promedio general no menor a 9 puntos.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#7C3AED"></div><div class="acc-text"><b>Diploma de Honor:</b> Para alumnos con promedio general de 8 o más puntos que cumplan las demás condiciones y hayan completado la carrera dentro de los tiempos de regularidad.</div></div>
+            </div>
+            <div class="acc-source">Art. 29°, 30° y 31° / Anexo Premios Art. 3° al 6° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25)</div>
+          </div></div>
+        </div>
+
+        <!-- 7. Escala de calificaciones -->
+        <div class="acc-item" id="acc-7">
+          <button class="acc-trigger" onclick="toggleAcc('acc-7')" aria-expanded="false">
+            <div class="acc-trigger-left">
+              <div class="acc-icon" style="background:#FFF7ED"><i class="ti ti-list-numbers" style="color:#993C1D"></i></div>
+              <div class="acc-label">Escala de Calificaciones</div>
+            </div>
+            <i class="ti ti-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body"><div class="acc-inner">
+            <p class="acc-lead">La escala aplica a toda instancia de evaluación: parciales, trabajos prácticos y exámenes finales.</p>
+            <div class="acc-list">
+              <div class="acc-row"><div class="acc-dot" style="background:#BE123C"></div><div class="acc-text"><b>1, 2 y 3 — Insuficiente.</b> No aprobado.</div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#B45309"></div><div class="acc-text"><b>4 y 5 — Aprobado.</b></div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#185FA5"></div><div class="acc-text"><b>6 y 7 — Bueno.</b></div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#0F6E56"></div><div class="acc-text"><b>8 y 9 — Distinguido.</b></div></div>
+              <div class="acc-row"><div class="acc-dot" style="background:#3C3489"></div><div class="acc-text"><b>10 — Sobresaliente.</b></div></div>
+            </div>
+            <div class="acc-source">Art. 2° — Reglamento de Escolaridad FHyCE · UCA Mendoza (Acta N°5, 30/10/25) / Ordenanza VII Art. 14°</div>
+          </div></div>
+        </div>
+
+      </div><!-- /accordion -->
+    </div><!-- /info-body -->
+  </div><!-- /info-section -->
+
+  <div id="year-content"></div>
+</div>
+
+<div class="legend-pill" id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#3B82F6"></div>Regular para cursar</div>
+  <div class="leg"><div class="leg-dot" style="background:#10B981"></div>Aprobada para rendir</div>
+  <div class="leg"><div class="leg-dot" style="background:#F59E0B"></div>Desbloquea</div>
+</div>
+
+<div class="sheet-overlay" id="overlay" onclick="closeSheet()"></div>
+
+<div class="bottom-sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header" id="sheet-header">
+    <div class="sheet-accent-bar" id="sheet-accent"></div>
+    <div class="sheet-title" id="sheet-title">Materia</div>
+    <div class="sheet-meta" id="sheet-meta"></div>
+    <button class="sheet-close" onclick="closeSheet()" aria-label="Cerrar"><i class="ti ti-x" aria-hidden="true"></i></button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<!-- TOAST -->
+<div class="save-toast" id="save-toast">Cambios guardados</div>
+
+<!-- ADMIN BUTTON -->
+<button id="admin-btn" onclick="openAdminPanel()" aria-label="Panel de edición">
+  <i class="ti ti-lock"></i>
+  <span>EDITAR</span>
+</button>
+
+<!-- ADMIN OVERLAY -->
+<div id="admin-overlay" onclick="closeAdminPanel()"></div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <div>
+      <div class="admin-title">Panel de Edición</div>
+      <div class="admin-subtitle" id="admin-subtitle">GND · UCA Mendoza</div>
+    </div>
+    <button class="admin-close" onclick="closeAdminPanel()" aria-label="Cerrar panel"><i class="ti ti-x"></i></button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="admin-login">
+    <div class="login-icon"><i class="ti ti-lock"></i></div>
+    <div class="login-title">Acceso restringido</div>
+    <div class="login-sub">Ingresá el PIN para editar<br>docentes, mesas y horarios</div>
+    <input class="pin-input" id="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="·  ·  ·  ·" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="login-btn" onclick="adminLogin()">Ingresar</button>
+  </div>
+
+  <!-- CONTENT (visible after login) -->
+  <div id="admin-content">
+    <!-- Section tabs -->
+    <div class="admin-section-tabs">
+      <button class="admin-sec-tab active" id="sec-tab-materias" onclick="switchAdminSection('materias')"><i class="ti ti-user" style="font-size:12px"></i> Docentes</button>
+      <button class="admin-sec-tab" id="sec-tab-mesas" onclick="switchAdminSection('mesas')"><i class="ti ti-calendar" style="font-size:12px"></i> Mesas</button>
+      <button class="admin-sec-tab" id="sec-tab-horarios" onclick="switchAdminSection('horarios')"><i class="ti ti-clock" style="font-size:12px"></i> Horarios</button>
+    </div>
+
+    <!-- DOCENTES TAB -->
+    <div id="admin-tab-materias" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div class="admin-yr-tabs" id="admin-yr-tabs"></div>
+      <div class="admin-mat-list" id="admin-mat-list"></div>
+    </div>
+
+    <!-- MESAS TAB -->
+    <div id="admin-tab-mesas" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+      <div class="admin-mat-list" id="admin-mesas-list"></div>
+    </div>
+
+    <!-- HORARIOS TAB -->
+    <div id="admin-tab-horarios" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+      <div class="admin-yr-tabs" id="admin-yr-tabs-hor"></div>
+      <div class="admin-mat-list" id="admin-horarios-list"></div>
+    </div>
+
+    <!-- Save bar -->
+    <div class="admin-save-row">
+      <button class="admin-save-btn" onclick="adminSave()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+      <button class="admin-logout-btn" onclick="adminLogout()" title="Cerrar sesión"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const YR_COLORS={1:'#3C3489',2:'#185FA5',3:'#0F6E56',4:'#993C1D'};
+const YR_LABELS={1:'1° Año',2:'2° Año',3:'3° Año',4:'4° Año'};
+
+const MAT=[
+  {id:1,label:'Arquitectura de Tecnología de la Información',short:'Arq. Tec. Inf.',ref:1,yr:1,sem:1,preR:[],preA:[],hs:64},
+  {id:2,label:'Matemática Aplicada I',short:'Mat. Aplicada I',ref:2,yr:1,sem:1,preR:[],preA:[],hs:64},
+  {id:3,label:'Microeconomía',short:'Microeconomía',ref:3,yr:1,sem:1,preR:[],preA:[],hs:64},
+  {id:4,label:'Contabilidad',short:'Contabilidad',ref:4,yr:1,sem:1,preR:[],preA:[],hs:64},
+  {id:5,label:'Bases de Datos',short:'Bases de Datos',ref:5,yr:1,sem:1,preR:[],preA:[],hs:64},
+  {id:6,label:'Filosofía y Antropología',short:'Filos. y Antrop.',ref:6,yr:1,sem:1,preR:[],preA:[],hs:48},
+  {id:7,label:'Administración',short:'Administración',ref:7,yr:1,sem:2,preR:[],preA:[],hs:64},
+  {id:8,label:'Matemática Aplicada II',short:'Mat. Aplicada II',ref:8,yr:1,sem:2,preR:[2],preA:[2],hs:64},
+  {id:9,label:'Derecho Privado I',short:'Derecho Privado I',ref:9,yr:1,sem:2,preR:[],preA:[],hs:64},
+  {id:10,label:'Negocios y Tecnología de Internet',short:'Neg. y Tec. Internet',ref:10,yr:1,sem:2,preR:[],preA:[],hs:64},
+  {id:11,label:'Contabilidad y Sistemas de Información',short:'Cont. y Sist. Inf.',ref:11,yr:1,sem:2,preR:[4],preA:[4],hs:64},
+  {id:12,label:'Seminario I',short:'Seminario I',ref:12,yr:1,sem:2,preR:[6],preA:[6],hs:48},
+  {id:13,label:'Estadística',short:'Estadística',ref:13,yr:2,sem:1,preR:[8],preA:[8],hs:64},
+  {id:14,label:'Macroeconomía',short:'Macroeconomía',ref:14,yr:2,sem:1,preR:[],preA:[],hs:64},
+  {id:15,label:'Seminario de Estados Financieros',short:'Sem. Est. Financieros',ref:15,yr:2,sem:1,preR:[11],preA:[11],hs:32},
+  {id:16,label:'Derecho Laboral y de la Seguridad Social',short:'Der. Lab. y Seguridad',ref:16,yr:2,sem:1,preR:[],preA:[],hs:64},
+  {id:17,label:'Administración Avanzada',short:'Adm. Avanzada',ref:17,yr:2,sem:1,preR:[7],preA:[7],hs:64},
+  {id:18,label:'Ética y Fundamentos Filosóficos',short:'Ética y Fundamentos',ref:18,yr:2,sem:1,preR:[6],preA:[6],hs:48},
+  {id:19,label:'Introducción a la Teología',short:'Introd. Teología',ref:19,yr:2,sem:1,preR:[6],preA:[6],hs:48},
+  {id:20,label:'Competitividad y Costos',short:'Compet. y Costos',ref:20,yr:2,sem:2,preR:[14],preA:[14],hs:64},
+  {id:21,label:'Matemática Financiera',short:'Mat. Financiera',ref:21,yr:2,sem:2,preR:[8],preA:[8],hs:64},
+  {id:22,label:'Gestión de Personas',short:'Gestión de Personas',ref:22,yr:2,sem:2,preR:[],preA:[],hs:64},
+  {id:23,label:'Seguridad de la Información',short:'Seg. de la Información',ref:23,yr:2,sem:2,preR:[5],preA:[5],hs:64},
+  {id:24,label:'Fundamentos del Marketing',short:'Fund. del Marketing',ref:24,yr:2,sem:2,preR:[17],preA:[17],hs:64},
+  {id:25,label:'Derecho Privado II',short:'Derecho Privado II',ref:25,yr:2,sem:2,preR:[9],preA:[9],hs:32},
+  {id:26,label:'Seminario II',short:'Seminario II',ref:26,yr:2,sem:2,preR:[18,19],preA:[18,19],hs:48},
+  {id:'en',label:'Inglés',short:'Inglés',ref:'R',yr:2,sem:2,preR:[],preA:[],hs:0},
+  {id:27,label:'Dirección de Operaciones',short:'Dir. de Operaciones',ref:27,yr:3,sem:1,preR:[17],preA:[17],hs:64},
+  {id:28,label:'Presupuesto y Control de Gestión',short:'Presupuesto y Control',ref:28,yr:3,sem:1,preR:[17],preA:[17],hs:64},
+  {id:29,label:'Gestión Tributaria',short:'Gestión Tributaria',ref:29,yr:3,sem:1,preR:[],preA:[],hs:64},
+  {id:30,label:'Fundamentos de Ingeniería de Software',short:'Fund. Ing. Software',ref:30,yr:3,sem:1,preR:[1,5,10,17],preA:[1,5,10,17],hs:64},
+  {id:31,label:'Gerencia y Liderazgo',short:'Gerencia y Liderazgo',ref:31,yr:3,sem:1,preR:[17],preA:[17],hs:64},
+  {id:32,label:'Síntesis Teológica',short:'Síntesis Teológica',ref:32,yr:3,sem:1,preR:[],preA:[],hs:48},
+  {id:33,label:'Gestión de Proyectos Digitales',short:'Gest. Proy. Digitales',ref:33,yr:3,sem:2,preR:[1,5,10,17],preA:[1,5,10,17],hs:64},
+  {id:34,label:'Finanzas Corporativas',short:'Finanzas Corporativas',ref:34,yr:3,sem:2,preR:[17],preA:[17],hs:64},
+  {id:35,label:'Marketing Estratégico',short:'Marketing Estratégico',ref:35,yr:3,sem:2,preR:[24],preA:[24],hs:32},
+  {id:36,label:'Dirección y Control Económico',short:'Dir. y Ctrl. Económico',ref:36,yr:3,sem:2,preR:[31],preA:[31],hs:64},
+  {id:37,label:'Aplicaciones de Telecomunicaciones',short:'Aplic. Telecom.',ref:37,yr:3,sem:2,preR:[],preA:[],hs:32},
+  {id:38,label:'Sistemas Integrados de Gestión',short:'Sist. Integrados Gest.',ref:38,yr:3,sem:2,preR:[23,17],preA:[23,17],hs:64},
+  {id:39,label:'Seminario III',short:'Seminario III',ref:39,yr:3,sem:2,preR:[32],preA:[32],hs:48},
+  {id:40,label:'Innovación en Marketing',short:'Innov. en Marketing',ref:40,yr:4,sem:1,preR:[24],preA:[24],hs:64},
+  {id:41,label:'Seminario Contable: S.A. y ONG',short:'Sem. Cont. SA y ONG',ref:41,yr:4,sem:1,preR:[15],preA:[15],hs:32},
+  {id:42,label:'Fundamentos de Interacción Persona-Computadora',short:'Fund. de Interacción',ref:42,yr:4,sem:1,preR:[],preA:[],hs:64},
+  {id:43,label:'Tecnologías Aplicadas a la Gestión',short:'Tecnologías Aplicadas',ref:43,yr:4,sem:1,preR:[28,29,35],preA:[28,29,35],hs:64},
+  {id:44,label:'Comercio Electrónico',short:'Comercio Electrónico',ref:44,yr:4,sem:1,preR:[33],preA:[33],hs:64},
+  {id:45,label:'Ética Económica y Empresarial',short:'Ética Econ. Empresarial',ref:45,yr:4,sem:1,preR:[],preA:[],hs:48},
+  {id:'op1',label:'Optativa I',short:'Optativa I',ref:'O1',yr:4,sem:1,preR:[],preA:[],hs:64},
+  {id:47,label:'Entrepreneurship',short:'Entrepreneurship',ref:47,yr:4,sem:2,preR:[34],preA:[34],hs:64},
+  {id:48,label:'Inteligencia Artificial',short:'Inteligencia Artificial',ref:48,yr:4,sem:2,preR:[30],preA:[30],hs:64},
+  {id:49,label:'Servicios de Información y Plataformas Web',short:'Serv. Inf. y Plat. Web',ref:49,yr:4,sem:2,preR:[33],preA:[33],hs:64},
+  {id:50,label:'Auditoría de Sistemas',short:'Auditoría de Sistemas',ref:50,yr:4,sem:2,preR:[4,11,14],preA:[4,11,14],hs:64},
+  {id:'op2',label:'Optativa II',short:'Optativa II',ref:'O2',yr:4,sem:2,preR:[],preA:[],hs:64},
+  {id:52,label:'Seminario IV',short:'Seminario IV',ref:52,yr:4,sem:2,preR:[45],preA:[45],hs:48},
+];
+
+const CONT={
+  1:'Lenguajes de Programación. Historia y paradigmas de programación. Estructura de un programa. Tipos de datos, constantes y variables. Operadores y expresiones. Estructuras de control: secuenciación, condicional e iteración. Funciones y parámetros. Arreglos. Cadenas. Punteros y memoria dinámica.',
+  2:'Límite y continuidad. Derivadas y optimización. Integrales indefinidas y definidas. Matrices y Determinantes. Sistemas de ecuaciones lineales. Funciones de n variables. Derivadas parciales. Optimización con y sin restricciones. Series geométricas.',
+  3:'Oferta, Demanda y Equilibrio de Mercado. Teoría del Consumidor: preferencias, utilidad, demanda. Teoría de la Empresa: producción, maximización del beneficio. Análisis de Equilibrio Parcial. Monopolio, Oligopolio, Monopsonio.',
+  4:'Estados Contables: situación patrimonial, resultados y evolución del patrimonio neto. Criterios de valuación. Medición al cierre de ejercicio. Conceptos de costo, valores corrientes y valor neto de realización.',
+  5:'Datos e Información. Origen de las Bases de Datos. Modelos de datos lógicos y físicos. Modelo relacional. Diagramas E-R y dependencia funcional. Reglas de Codd, normalización de tablas.',
+  6:'Introducción a la Filosofía. Preguntas humanas fundamentales. Origen del filosofar. Antropología filosófica. La persona como noción central del humanismo. Aspectos existenciales, relacionales y sociales de la persona.',
+  7:'Evolución del pensamiento en administración: escuelas y pensamiento contemporáneo. Análisis del entorno. Análisis descriptivo de la organización: ambiente, estructura de propiedad, localización y recursos. Modelos de estructura organizacional.',
+  8:'Funciones reales de una variable, límite y continuidad. Cálculo diferencial. Optimización de funciones de una variable. Integrales indefinidas y definidas y sus aplicaciones.',
+  9:'Sujetos del Derecho: Persona Humana y Jurídica. Hecho y Actos Jurídicos. Vicios e Ineficacia. Obligaciones: mora y responsabilidad civil. Contratos. Derechos Reales. Derecho de familia y Sucesiones.',
+  10:'Internet y TIC. Evolución de la Web. Comercio Electrónico (e-Commerce y m-Commerce). e-Business. Dinero Electrónico y Criptomonedas. Web 1.0, 2.0 y 3.0. Infraestructura Tecnológica para negocios en Internet.',
+  11:'Aportes no capitalizados. Valuaciones técnicas. Ganancias reservadas. Absorción de pérdidas. El sistema contable como componente del sistema de información. Subsistemas contables que reflejan el ciclo operativo.',
+  12:'La antropología en las ciencias económicas. Problemática del diálogo interdisciplinario. Temas clásicos antropológicos. Casos concretos de aplicación.',
+  13:'Probabilidad y combinatoria. Variable aleatoria discreta y continua. Distribuciones básicas de probabilidad. Estadística descriptiva. Tablas y gráficos. Números índice.',
+  14:'Política monetaria y fiscal. Tipo de cambio y balanza de pagos. Oferta agregada: salarios, precios y ocupación. Inflación y desempleo. Modelos IS-LM / AS-AD.',
+  15:'Análisis e interpretación de estados financieros. Métodos verticales y horizontales. Valor económico agregado. Flujo de efectivo. Diagnóstico financiero. Apalancamiento operativo, financiero y total.',
+  16:'Conceptos del trabajo. Art. 14 bis. Contrato de trabajo: tipos, remuneración, jornada laboral, descansos. Sistema Indemnizatorio. Seguridad social. ART. Obras sociales. Jubilaciones.',
+  17:'Dimensiones de la organización. Empresa como sistema complejo. Etapas del ciclo de vida. Análisis histórico y dinámico del entorno competitivo. Subsistemas: comercial, operaciones, aprovisionamiento, RRHH, finanzas, información y control.',
+  18:'Naturaleza y objeto de la ética. Fin y felicidad. El obrar moral. Normas de la moralidad. La conciencia moral. Virtudes fundamentales. Bien común. La empresa.',
+  19:'La búsqueda: el ser humano es capaz de Dios. La Revelación divina. La Palabra de Dios en las Sagradas Escrituras y la Tradición. La gracia como iniciativa divina.',
+  20:'Costos: componentes, clasificaciones, sistemas y modelos. Costos de producción, comercialización, financieros y de administración. Análisis de variabilidad. Control de eficiencia.',
+  21:'Valor del dinero en el tiempo. VAN. Interés simple y compuesto. Tasas nominales y efectivas. Equivalencias entre tasas. Sistemas de amortización: francés y alemán. Funciones financieras de Excel.',
+  22:'Comportamiento humano en las organizaciones. Estilos de administración. Clima organizacional. Comunicación organizacional: lenguajes, canales físicos, digitales y virtuales. Retroalimentación.',
+  23:'Fundamentos de la seguridad de la información. Componentes de un SGSI. Requisitos: Competitividad, Confianza, Cumplimiento Legal, Imagen y Reducción de riesgos. Valoración de riesgos.',
+  24:'Marketing estratégico vs operativo. Investigación de mercado. Comportamiento del consumidor. Segmentación. Target y Posicionamiento. Producto y Ciclo de vida. Marca. Fijación de precios. Distribución.',
+  25:'Introducción al Derecho Comercial. Empresa, Hacienda y Agentes auxiliares. Contratos comerciales. Garantías, Seguros y Entidades Financieras. Títulos y valores. Sociedades comerciales.',
+  26:'Fe cristiana, razón filosófica y disciplinas particulares. Problemática del diálogo interdisciplinario. Casos concretos de aplicación.',
+  27:'Dirección de producción y operaciones. Decisiones de capacidad, localización y tecnología. Planificación y programación de la producción. Gestión de inventarios. Calidad y certificaciones.',
+  28:'Proceso de planificación y presupuestación. Presupuestos del área comercial, de producción y de capital. Enfoques integrados para la planeación. Control de gestión.',
+  29:'Principios de la tributación. Régimen tributario argentino. Tributos nacionales y provinciales: objeto, sujetos, exenciones, liquidación. Procedimiento tributario y facultades de la AFIP.',
+  30:'Ingeniería del Software como disciplina. Proyectos de Desarrollo de Software. Sistemas colaborativos. Aseguramiento y control de calidad. Reingeniería. Administración de riesgos.',
+  31:'Organización y gerenciamiento del capital humano. Desarrollo organizacional. Resistencia al cambio. Liderazgo del cambio. RRHH como socio estratégico. Gestión por competencias.',
+  32:'Fenomenología de la religión. El saber teológico. Teología de la Revelación. Dios Uno, Trino y Creador. La Iglesia en el designio de Dios. Los sacramentos.',
+  33:'Conceptos básicos de Sistemas Operativos. Manejo de Memoria y Memoria Virtual. Concepto de procesos. Deadlocks: prevención, evitación y detención. Coordinación de Procesos.',
+  34:'Proyecciones económico-financieras. Gestión del capital de trabajo. Estructura de capital. Estructuración legal. Financiación en mercados emergentes. IPO.',
+  35:'Importancia del Marketing Estratégico. Análisis comparativo de mercados. Análisis de necesidades y competidores. Metodologías de Segmentación. Posicionamiento: concepto y modelos.',
+  36:'Tablero de Control: tipos, beneficios, mapas estratégicos. Perspectiva financiera, del cliente y de procesos internos. Calidad total. Benchmarking y reingeniería.',
+  37:'Fundamentos de las comunicaciones y teleinformática. Medios de Transmisión. Protocolo TCP/IP. Redes Móviles. Arquitectura WEB/Mobile. Seguridad en Redes. Topologías LAN-MAN-WAN.',
+  38:'Análisis, Diseño e Implementación de Sistemas de Información. Reingeniería de procesos de negocios. Gestión de procesos. Evaluación de sistemas aplicativos. Herramientas para Testing.',
+  39:'Misterio y belleza de la fe cristiana. Profundización de algún aspecto del mensaje cristiano en perspectiva de encuentro con la realidad sociocultural actual.',
+  40:'Marketing de Experiencias. Marketing vivencial. Marketing social y de relaciones. Marketing virtual y digital. Big Data marketing. Tendencias del marketing.',
+  41:'Economía Social. Responsabilidad Socio-Ambiental y Balance Social. Contabilidad Ambiental Financiera. Entes sin fines de lucro: Asociaciones y Fundaciones.',
+  42:'Evolución de la interacción. Interfaces: líneas de comando, menúes, GUI. Gestión de proyectos informáticos: participantes y roles. Implementación de Sistemas de Información.',
+  43:'TIC y Sistemas de Información a la Gerencia. Estrategia de negocios y estrategia tecnológica. El papel de las tecnologías de la información en la Organización.',
+  44:'E-Business: concepto, características, objetivos y requisitos. Comercio electrónico y las organizaciones. Estructura del comercio electrónico. Transacciones y Monedas. Modelos de negocio en internet.',
+  45:'Dignidad de la persona. Experiencia de libertad y razón moral. Ética personal y social. Acción económica y ética. El mercado desde la DSI. Ética del consumo, marketing y publicidad. RSE.',
+  47:'Cultura emprendedora. Perfil del emprendedor. Proceso emprendedor. Creatividad para generar valor. Diseño del modelo de negocio. Plan de negocios. Valuación de negocios.',
+  48:'Búsqueda informada y local, algoritmos genéticos. Representación del conocimiento. Aprendizaje Automático: árboles de decisión y Redes Neurales. Big Data, Business Intelligence, Minería de Datos, Cloud Computing.',
+  49:'Aplicaciones web y servicios web: evolución y características. Arquitecturas lógica vs. física. Diseño de Aplicaciones y Servicios Web. Seguridad, Usabilidad y Pruebas.',
+  50:'Planeación de la auditoría. Diseño del programa de auditorías. Registro de No Conformidades. Informe y hallazgos de auditoría.',
+  52:'Aproximación a la moral personal y social. Pensamiento social cristiano y las ciencias económicas. Encíclicas sociales. Ejercicio de diálogo interdisciplinar.',
+  en:'Lecto-comprensión de textos en inglés y producción escrita de textos breves sobre economía y negocios. Nivel B2 del Marco Común Europeo de Referencia.',
+  op1:'A elección entre: Negociación / Planificación y Administración de las Dotaciones / Relaciones Laborales y Manejo de Conflictos.',
+  op2:'A elección entre: Metodologías ágiles de desarrollo de software / Comportamiento e Investigación de Mercado / Distribución y Trade Marketing.',
+};
+
+const byId={};
+MAT.forEach(m=>byId[m.id]=m);
+
+function getUnlocks(id){return MAT.filter(m=>m.preR.includes(id)||m.preA.includes(id));}
+function getColor(m){
+  if(m.id==='en') return '#633806';
+  if(typeof m.id==='string'&&m.id.startsWith('op')) return '#5F5E5A';
+  return YR_COLORS[m.yr];
+}
+
+let sel=null;
+let activeYr=1;
+
+// Build year tabs
+function buildTabs(){
+  const t=document.getElementById('yr-tabs');
+  [1,2,3,4].forEach(yr=>{
+    const b=document.createElement('button');
+    b.className='yr-btn'+(yr===1?' active':'');
+    b.id='yb-'+yr;
+    b.textContent=YR_LABELS[yr];
+    b.onclick=()=>switchYr(yr);
+    t.appendChild(b);
+  });
+  updateProgress(1);
+}
+
+function updateProgress(yr){
+  document.querySelectorAll('.prog-seg').forEach(s=>{
+    const y=+s.dataset.yr;
+    s.style.background = y<=yr ? YR_COLORS[yr] : '#E8E8E8';
+  });
+}
+
+function switchYr(yr){
+  if(activeYr===yr) return;
+  document.getElementById('yb-'+activeYr).classList.remove('active');
+  activeYr=yr;
+  document.getElementById('yb-'+yr).classList.add('active');
+  updateProgress(yr);
+  closeSheet();
+  sel=null;
+  renderYear();
+  document.getElementById('main-scroll').scrollTop=0;
+}
+
+function renderYear(){
+  const c=document.getElementById('year-content');
+  c.innerHTML='';
+  [1,2].forEach(sem=>{
+    const mats=MAT.filter(m=>m.yr===activeYr&&m.sem===sem);
+    if(!mats.length) return;
+    const sec=document.createElement('div');
+    const sh=document.createElement('div');
+    sh.className='sem-header';
+    sh.innerHTML=`<div class="sem-line"></div><div class="sem-label">${sem===1?'1° Semestre':'2° Semestre'}</div><div class="sem-line"></div>`;
+    sec.appendChild(sh);
+    const grid=document.createElement('div');
+    grid.className='cards-grid';
+    mats.forEach(m=>{
+      const card=document.createElement('div');
+      card.className='s-card';
+      card.id='card-'+m.id;
+      const color=getColor(m);
+      card.innerHTML=`
+        <div class="s-card-accent" style="background:${color}"></div>
+        <div class="hi-dot"></div>
+        <div class="s-card-name">${m.short}</div>
+        <div class="s-card-prof ${PROF[m.id]?'':'sin-dato'}">${PROF[m.id]||'Docente a confirmar'}</div>
+        <div class="s-card-footer">
+          <div class="s-card-ref">${m.ref}</div>
+          ${m.hs?`<div class="s-card-hs"><i class="ti ti-clock" aria-hidden="true"></i>${m.hs}h</div>`:''}
+        </div>`;
+      card.onclick=()=>selectCard(m.id);
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    c.appendChild(sec);
+  });
+}
+
+function selectCard(id){
+  if(sel===id){closeSheet();return;}
+  sel=id;
+  applyHighlights();
+  openSheet(id);
+}
+
+function applyHighlights(){
+  if(!sel) return;
+  const cur=byId[sel];
+  const unlockIds=new Set(getUnlocks(sel).map(m=>m.id));
+  const preRSet=new Set(cur.preR);
+  const preASet=new Set(cur.preA);
+
+  document.querySelectorAll('.s-card').forEach(el=>{
+    const rawId=el.id.replace('card-','');
+    const nid=isNaN(rawId)?rawId:+rawId;
+    el.classList.remove('selected','hi-req','hi-aprob','hi-unlocks','dim');
+    if(nid==sel){el.classList.add('selected');return;}
+    const isR=preRSet.has(nid);
+    const isA=preASet.has(nid);
+    const isU=unlockIds.has(nid);
+    if(isR&&isA){el.classList.add('hi-req');}
+    else if(isR){el.classList.add('hi-req');}
+    else if(isA){el.classList.add('hi-aprob');}
+    else if(isU){el.classList.add('hi-unlocks');}
+    else{el.classList.add('dim');}
+  });
+}
+
+function clearHighlights(){
+  document.querySelectorAll('.s-card').forEach(el=>{
+    el.classList.remove('selected','hi-req','hi-aprob','hi-unlocks','dim');
+  });
+}
+
+function openSheet(id){
+  const m=byId[id];
+  if(!m) return;
+  const color=getColor(m);
+  const preRSet=new Set(m.preR);
+  const preASet=new Set(m.preA);
+  const both=m.preR.filter(x=>preASet.has(x));
+  const onlyR=m.preR.filter(x=>!preASet.has(x));
+  const onlyA=m.preA.filter(x=>!preRSet.has(x));
+  const unlocks=getUnlocks(id);
+  const cont=CONT[id]||'';
+
+  document.getElementById('sheet-accent').style.background=color;
+  document.getElementById('sheet-title').textContent=m.label;
+
+  const meta=document.getElementById('sheet-meta');
+  const yrColor=getColor(m);
+  const profVal=PROF[m.id];
+  meta.innerHTML=`
+    <span class="sheet-yr-badge" style="background:${yrColor}">${YR_LABELS[m.yr||1]} — ${m.sem===1?'1° Sem':'2° Sem'}</span>
+    ${m.hs?`<span class="sheet-hs-badge"><i class="ti ti-clock" aria-hidden="true"></i> ${m.hs} horas</span>`:''}
+    <div class="sheet-prof-row">
+      <span class="sheet-prof-label"><i class="ti ti-user" style="font-size:12px;vertical-align:middle"></i>&nbsp;Docente:</span>
+      <span class="sheet-prof-val ${profVal?'':'sin-dato'}">${profVal||'A confirmar'}</span>
+    </div>`;
+
+  function chip(pid,type){
+    const pm=byId[pid];
+    return `<span class="chip chip-${type}"><span class="chip-dot"></span>${pm?pm.short:pid}</span>`;
+  }
+
+  let html='';
+
+  if(both.length||onlyR.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-circle-check" aria-hidden="true" style="color:#3B82F6"></i>Regular para cursar</div>
+      <div class="chips-row">${[...both,...onlyR].map(p=>chip(p,'req')).join('')}</div>
+    </div>`;
+  }
+  if(both.length||onlyA.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-circle-check" aria-hidden="true" style="color:#10B981"></i>Aprobada para rendir</div>
+      <div class="chips-row">${[...both,...onlyA].map(p=>chip(p,'aprob')).join('')}</div>
+    </div>`;
+  }
+  if(!both.length&&!onlyR.length&&!onlyA.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-circle" aria-hidden="true"></i>Correlativas previas</div>
+      <span class="chip-none">Sin correlativas previas</span>
+    </div>`;
+  }
+
+  html+=`<div class="corr-section">
+    <div class="corr-section-label"><i class="ti ti-arrow-right" aria-hidden="true" style="color:#F59E0B"></i>Materias que desbloquea</div>
+    <div class="chips-row">${unlocks.length?unlocks.map(u=>chip(u.id,'unlock')):'<span class="chip-none">No es prerrequisito de ninguna otra</span>'}</div>
+  </div>`;
+
+  if(cont){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-book-2" aria-hidden="true"></i>Contenidos mínimos</div>
+      <div class="cont-box">${cont}</div>
+    </div>`;
+  }
+
+  document.getElementById('sheet-body').innerHTML=html;
+
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('legend').classList.add('hidden');
+}
+
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('legend').classList.remove('hidden');
+  sel=null;
+  clearHighlights();
+}
+
+window.closeSheet=closeSheet;
+
+// Swipe to close sheet
+let startY=0;
+const sheet=document.getElementById('sheet');
+sheet.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;},{passive:true});
+sheet.addEventListener('touchend',e=>{
+  const dy=e.changedTouches[0].clientY-startY;
+  if(dy>60) closeSheet();
+},{passive:true});
+
+// SECCIÓN COLAPSABLE
+function toggleInfo(){
+  const sec=document.getElementById('info-section');
+  const body=document.getElementById('info-body');
+  const btn=sec.querySelector('.info-toggle');
+  const hint=sec.querySelector('.info-toggle-hint span');
+  const isOpen=sec.classList.contains('open');
+  if(isOpen){
+    body.style.maxHeight=body.scrollHeight+'px';
+    requestAnimationFrame(()=>{ body.style.maxHeight='0px'; });
+    sec.classList.remove('open');
+    btn.setAttribute('aria-expanded','false');
+    hint.textContent='Ver';
+  } else {
+    sec.classList.add('open');
+    body.style.maxHeight=body.scrollHeight+'px';
+    btn.setAttribute('aria-expanded','true');
+    hint.textContent='Ocultar';
+    setTimeout(()=>{ body.style.maxHeight='none'; },400);
+  }
+}
+
+// ACORDEONES
+function toggleAcc(id){
+  const item=document.getElementById(id);
+  const body=item.querySelector('.acc-body');
+  const btn=item.querySelector('.acc-trigger');
+  const isOpen=item.classList.contains('open');
+  document.querySelectorAll('.acc-item.open').forEach(el=>{
+    el.classList.remove('open');
+    el.querySelector('.acc-body').style.maxHeight='';
+    el.querySelector('.acc-trigger').setAttribute('aria-expanded','false');
+  });
+  if(!isOpen){
+    item.classList.add('open');
+    body.style.maxHeight=body.scrollHeight+'px';
+    btn.setAttribute('aria-expanded','true');
+  }
+}
+
+// PROFESORES (base — se sobreescribe con localStorage)
+const PROF_BASE={
+  1:'TEDINO, Anabelia',
+  2:'FITT, Gisela',
+  3:'BERLI, Mariana / DI MARCO, Gabriela',
+  4:'ALONSO, Ángela / BEVILACQUA, Javier',
+  5:'BRITOS, Domingo',
+  6:'CANO, Gustavo',
+  7:'FERNANDEZ TORTI, Juan',
+  8:'FITT, Gisela',
+  9:'ZAPATA, Verónica / LUCERO, Marina',
+  10:'ESCOLAR, Alfredo',
+  11:'TOLEDO, Fernando',
+  12:'GIL, Emilio',
+  13:'TORNELLO NASISI, Leonardo',
+  14:'BERLI, Mariana / DI MARCO, Gabriela',
+  15:'TOLEDO, Fernando',
+  16:'MARCELLINI, Enzo',
+  17:'SALINAS, Jessica / COSTANTINO VON ZEDWITZ, Federico Gabriel',
+  18:'DI CARLO, Leonardo',
+  19:'DI CARLO, Leonardo',
+  20:'MARKUS, Fernando / BEVILACQUA, Javier',
+  21:'SANCHEZ, Gabriela',
+  22:'MANZITTI, Natacha',
+  23:'ELGUETA, Atilio',
+  24:'DE CASAS, Verónica / MOURADIAN, Gonzalo',
+  25:'DE IBARLUCEA, Tomás',
+  26:'GIL, Emilio',
+  en:'PUSTAVRH, Cecilia',
+  27:'MONTERSINO, María José / COSTANTINO VON ZEDWITZ, Federico Gabriel',
+  28:'BAGINI, Paula',
+  29:'RUIZ, Liliana Marcela',
+  30:'GUTIERREZ LEGARIO, Patrik Jefry',
+  31:'AZEGLIO, Federico Gastón',
+  32:'GIL, Emilio Miguel',
+};
+
+// ── ESTADO EDITABLE ─────────────────────────────────────────────────────────
+// Se carga de localStorage al inicio y se sobreescribe al guardar.
+// PROF     : { matId: "Apellido, Nombre" }
+// MESAS    : { matId: [ {fecha, hora, aula, turno}, ... ] }
+// HORARIOS : { matId: { dias, horaInicio, horaFin, aula } }
+
+let PROF={...PROF_BASE};
+let MESAS={};
+let HORARIOS={};
+
+// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+// Reemplazá estos valores con los de tu proyecto en supabase.com
+const SUPABASE_URL = 'TU_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SB_TABLE = 'gnd_config'; // nombre de la tabla que vas a crear
+
+// ── LOAD (desde Supabase) ────────────────────────────────────────────────────
+async function loadStorage(){
+  try {
+    const { data, error } = await supabase
+      .from(SB_TABLE)
+      .select('key, value');
+    if(error) throw error;
+    data.forEach(row => {
+      if(row.key === 'prof')    PROF     = {...PROF_BASE, ...row.value};
+      if(row.key === 'mesas')   MESAS    = row.value;
+      if(row.key === 'horarios') HORARIOS = row.value;
+    });
+  } catch(e){
+    console.warn('Supabase: no se pudo cargar, usando datos base.', e);
+  }
+  buildTabs();
+  renderYear();
+}
+
+// ── SAVE (hacia Supabase) ────────────────────────────────────────────────────
+async function saveStorage(){
+  const rows = [
+    { key: 'prof',     value: PROF },
+    { key: 'mesas',    value: MESAS },
+    { key: 'horarios', value: HORARIOS },
+  ];
+  try {
+    const { error } = await supabase
+      .from(SB_TABLE)
+      .upsert(rows, { onConflict: 'key' });
+    if(error) throw error;
+  } catch(e){
+    console.error('Supabase: error al guardar.', e);
+    throw e; // re-lanzar para que adminSave muestre el error
+  }
+}
+
+// ── CARD RENDER (añade horario si existe) ────────────────────────────────────
+function renderYear(){
+  const c=document.getElementById('year-content');
+  c.innerHTML='';
+  [1,2].forEach(sem=>{
+    const mats=MAT.filter(m=>m.yr===activeYr&&m.sem===sem);
+    if(!mats.length) return;
+    const sec=document.createElement('div');
+    const sh=document.createElement('div');
+    sh.className='sem-header';
+    sh.innerHTML=`<div class="sem-line"></div><div class="sem-label">${sem===1?'1° Semestre':'2° Semestre'}</div><div class="sem-line"></div>`;
+    sec.appendChild(sh);
+    const grid=document.createElement('div');
+    grid.className='cards-grid';
+    mats.forEach(m=>{
+      const card=document.createElement('div');
+      card.className='s-card';
+      card.id='card-'+m.id;
+      const color=getColor(m);
+      const hor=HORARIOS[m.id];
+      let horHtml='';
+      if(hor&&(hor.dias||hor.horaInicio)){
+        const diasStr=hor.dias||'';
+        const horaStr=(hor.horaInicio&&hor.horaFin)?hor.horaInicio+'–'+hor.horaFin:(hor.horaInicio||'');
+        horHtml=`<div class="s-card-hor">${diasStr}${diasStr&&horaStr?' · ':''}<span style="font-weight:600">${horaStr}</span></div>`;
+      }
+      card.innerHTML=`
+        <div class="s-card-accent" style="background:${color}"></div>
+        <div class="hi-dot"></div>
+        <div class="s-card-name">${m.short}</div>
+        <div class="s-card-prof ${PROF[m.id]?'':'sin-dato'}">${PROF[m.id]||'Docente a confirmar'}</div>
+        ${horHtml}
+        <div class="s-card-footer">
+          <div class="s-card-ref">${m.ref}</div>
+          ${m.hs?`<div class="s-card-hs"><i class="ti ti-clock" aria-hidden="true"></i>${m.hs}h</div>`:''}
+        </div>`;
+      card.onclick=()=>selectCard(m.id);
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    c.appendChild(sec);
+  });
+}
+
+// ── OPEN SHEET (añade mesas y horarios) ─────────────────────────────────────
+function openSheet(id){
+  const m=byId[id];
+  if(!m) return;
+  const color=getColor(m);
+  const preRSet=new Set(m.preR);
+  const preASet=new Set(m.preA);
+  const both=m.preR.filter(x=>preASet.has(x));
+  const onlyR=m.preR.filter(x=>!preASet.has(x));
+  const onlyA=m.preA.filter(x=>!preRSet.has(x));
+  const unlocks=getUnlocks(id);
+  const cont=CONT[id]||'';
+
+  document.getElementById('sheet-accent').style.background=color;
+  document.getElementById('sheet-title').textContent=m.label;
+
+  const meta=document.getElementById('sheet-meta');
+  const yrColor=getColor(m);
+  const profVal=PROF[m.id];
+  meta.innerHTML=`
+    <span class="sheet-yr-badge" style="background:${yrColor}">${YR_LABELS[m.yr||1]} — ${m.sem===1?'1° Sem':'2° Sem'}</span>
+    ${m.hs?`<span class="sheet-hs-badge"><i class="ti ti-clock" aria-hidden="true"></i> ${m.hs} horas</span>`:''}
+    <div class="sheet-prof-row">
+      <span class="sheet-prof-label"><i class="ti ti-user" style="font-size:12px;vertical-align:middle"></i>&nbsp;Docente:</span>
+      <span class="sheet-prof-val ${profVal?'':'sin-dato'}">${profVal||'A confirmar'}</span>
+    </div>`;
+
+  function chip(pid,type){
+    const pm=byId[pid];
+    return `<span class="chip chip-${type}"><span class="chip-dot"></span>${pm?pm.short:pid}</span>`;
+  }
+
+  let html='';
+
+  // Horario
+  const hor=HORARIOS[m.id];
+  if(hor&&(hor.dias||hor.horaInicio||hor.aula)){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-calendar-time" aria-hidden="true" style="color:#185FA5"></i>Horario de cursada</div>
+      <div class="sheet-horario-block">`;
+    if(hor.dias||hor.horaInicio){
+      const diasStr=hor.dias||'—';
+      const horaStr=(hor.horaInicio&&hor.horaFin)?hor.horaInicio+' – '+hor.horaFin:(hor.horaInicio||'—');
+      html+=`<div class="sheet-horario-row"><i class="ti ti-clock"></i><span>${diasStr} &nbsp;·&nbsp; ${horaStr}</span></div>`;
+    }
+    if(hor.aula){
+      html+=`<div class="sheet-horario-row"><i class="ti ti-door"></i><span>Aula ${hor.aula}</span></div>`;
+    }
+    html+=`</div></div>`;
+  }
+
+  // Mesas de examen
+  const mesas=(MESAS[m.id]||[]).filter(x=>x.fecha);
+  if(mesas.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-calendar-event" aria-hidden="true" style="color:#F59E0B"></i>Mesas de examen</div>
+      <div class="sheet-mesas-grid">`;
+    mesas.forEach(mx=>{
+      const extra=[mx.hora,mx.aula?'Aula '+mx.aula:'',mx.turno].filter(Boolean).join(' · ');
+      html+=`<div class="sheet-mesa-chip">
+        <div class="sheet-mesa-dot"></div>
+        <div class="sheet-mesa-info">
+          <div class="sheet-mesa-fecha">${mx.fecha}</div>
+          ${extra?`<div class="sheet-mesa-extra">${extra}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  if(both.length||onlyR.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-circle-check" aria-hidden="true" style="color:#3B82F6"></i>Regular para cursar</div>
+      <div class="chips-row">${[...both,...onlyR].map(p=>chip(p,'req')).join('')}</div>
+    </div>`;
+  }
+  if(both.length||onlyA.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-circle-check" aria-hidden="true" style="color:#10B981"></i>Aprobada para rendir</div>
+      <div class="chips-row">${[...both,...onlyA].map(p=>chip(p,'aprob')).join('')}</div>
+    </div>`;
+  }
+  if(!both.length&&!onlyR.length&&!onlyA.length){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-circle" aria-hidden="true"></i>Correlativas previas</div>
+      <span class="chip-none">Sin correlativas previas</span>
+    </div>`;
+  }
+
+  html+=`<div class="corr-section">
+    <div class="corr-section-label"><i class="ti ti-arrow-right" aria-hidden="true" style="color:#F59E0B"></i>Materias que desbloquea</div>
+    <div class="chips-row">${unlocks.length?unlocks.map(u=>chip(u.id,'unlock')):'<span class="chip-none">No es prerrequisito de ninguna otra</span>'}</div>
+  </div>`;
+
+  if(cont){
+    html+=`<div class="corr-section">
+      <div class="corr-section-label"><i class="ti ti-book-2" aria-hidden="true"></i>Contenidos mínimos</div>
+      <div class="cont-box">${cont}</div>
+    </div>`;
+  }
+
+  document.getElementById('sheet-body').innerHTML=html;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('legend').classList.add('hidden');
+}
+
+// ── ADMIN PANEL ──────────────────────────────────────────────────────────────
+const ADMIN_PIN='0515';
+let adminAuth=false;
+let adminActiveSection='materias';
+let adminActiveYr=1;
+let adminActiveYrHor=1;
+
+// In-memory editing buffers (filled on render, read on save)
+// adminProfBuf[matId] = string
+// adminMesasBuf[matId] = [{fecha,hora,aula,turno}]
+// adminHorBuf[matId] = {dias,horaInicio,horaFin,aula}
+const adminProfBuf={};
+const adminMesasBuf={};
+const adminHorBuf={};
+
+function openAdminPanel(){
+  document.getElementById('admin-overlay').classList.add('open');
+  document.getElementById('admin-panel').classList.add('open');
+  // if already authed, go straight to content
+  if(adminAuth){
+    showAdminContent();
+  }
+}
+function closeAdminPanel(){
+  document.getElementById('admin-overlay').classList.remove('open');
+  document.getElementById('admin-panel').classList.remove('open');
+}
+window.openAdminPanel=openAdminPanel;
+window.closeAdminPanel=closeAdminPanel;
+
+function adminLogin(){
+  const val=document.getElementById('pin-input').value;
+  if(val===ADMIN_PIN){
+    adminAuth=true;
+    document.getElementById('pin-input').value='';
+    showAdminContent();
+  } else {
+    const inp=document.getElementById('pin-input');
+    inp.classList.add('error');
+    inp.value='';
+    setTimeout(()=>inp.classList.remove('error'),600);
+  }
+}
+window.adminLogin=adminLogin;
+
+function adminLogout(){
+  adminAuth=false;
+  document.getElementById('admin-content').classList.remove('visible');
+  document.getElementById('admin-login').style.display='';
+}
+window.adminLogout=adminLogout;
+
+function showAdminContent(){
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-content').classList.add('visible');
+  buildAdminYrTabs();
+  buildAdminYrTabsHor();
+  switchAdminSection('materias');
+}
+
+// ── SECTION SWITCHER ─────────────────────────────────────────────────────────
+function switchAdminSection(sec){
+  adminActiveSection=sec;
+  ['materias','mesas','horarios'].forEach(s=>{
+    document.getElementById('sec-tab-'+s).classList.toggle('active',s===sec);
+    document.getElementById('admin-tab-'+s).style.display=s===sec?'flex':'none';
+  });
+  if(sec==='materias') renderAdminMateriasList();
+  if(sec==='mesas')    renderAdminMesasList();
+  if(sec==='horarios') renderAdminHorariosList();
+}
+window.switchAdminSection=switchAdminSection;
+
+// ── YEAR TABS FOR MATERIAS ────────────────────────────────────────────────────
+function buildAdminYrTabs(){
+  const t=document.getElementById('admin-yr-tabs');
+  if(t.children.length) return;
+  [1,2,3,4].forEach(yr=>{
+    const b=document.createElement('button');
+    b.className='admin-yr-tab'+(yr===1?' active':'');
+    b.id='ayt-'+yr;
+    b.textContent=YR_LABELS[yr];
+    b.onclick=()=>{
+      adminActiveYr=yr;
+      document.querySelectorAll('.admin-yr-tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      renderAdminMateriasList();
+    };
+    t.appendChild(b);
+  });
+}
+function buildAdminYrTabsHor(){
+  const t=document.getElementById('admin-yr-tabs-hor');
+  if(t.children.length) return;
+  [1,2,3,4].forEach(yr=>{
+    const b=document.createElement('button');
+    b.className='admin-yr-tab'+(yr===1?' active':'');
+    b.id='ayth-'+yr;
+    b.textContent=YR_LABELS[yr];
+    b.onclick=()=>{
+      adminActiveYrHor=yr;
+      document.querySelectorAll('#admin-yr-tabs-hor .admin-yr-tab').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      renderAdminHorariosList();
+    };
+    t.appendChild(b);
+  });
+}
+
+// ── RENDER DOCENTES ──────────────────────────────────────────────────────────
+function renderAdminMateriasList(){
+  const list=document.getElementById('admin-mat-list');
+  list.innerHTML='';
+  const mats=MAT.filter(m=>m.yr===adminActiveYr);
+  mats.forEach(m=>{
+    const color=getColor(m);
+    const currentProf=adminProfBuf[m.id]!==undefined?adminProfBuf[m.id]:(PROF[m.id]||'');
+    const div=document.createElement('div');
+    div.className='admin-mat-item';
+    div.innerHTML=`
+      <div class="admin-mat-name">
+        <span class="admin-mat-badge" style="background:${color}">${m.ref}</span>
+        ${m.label}
+      </div>
+      <div class="admin-field">
+        <div class="admin-field-label"><i class="ti ti-user"></i> Docente</div>
+        <input class="admin-input" type="text"
+          placeholder="Apellido, Nombre / Apellido, Nombre"
+          value="${escHtml(currentProf)}"
+          data-matid="${m.id}"
+          oninput="adminProfBuf[this.dataset.matid]=this.value">
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+// ── RENDER MESAS ─────────────────────────────────────────────────────────────
+function renderAdminMesasList(){
+  const list=document.getElementById('admin-mesas-list');
+  list.innerHTML='';
+  [1,2,3,4].forEach(yr=>{
+    const mats=MAT.filter(m=>m.yr===yr);
+    if(!mats.length) return;
+    const secTitle=document.createElement('div');
+    secTitle.className='admin-mesa-section-title';
+    secTitle.textContent=YR_LABELS[yr];
+    list.appendChild(secTitle);
+    mats.forEach(m=>{
+      const color=getColor(m);
+      const mesas=adminMesasBuf[m.id]!==undefined?adminMesasBuf[m.id]:(MESAS[m.id]||[{fecha:'',hora:'',aula:'',turno:''},{fecha:'',hora:'',aula:'',turno:''}]);
+      if(!adminMesasBuf[m.id]) adminMesasBuf[m.id]=mesas.map(x=>({...x}));
+      // ensure at least 2 slots
+      while(adminMesasBuf[m.id].length<2) adminMesasBuf[m.id].push({fecha:'',hora:'',aula:'',turno:''});
+
+      const div=document.createElement('div');
+      div.className='admin-mesa-item';
+      div.style.borderLeftColor=color;
+      let mesasHtml='';
+      adminMesasBuf[m.id].forEach((mx,idx)=>{
+        mesasHtml+=`
+        <div style="margin-bottom:${idx<adminMesasBuf[m.id].length-1?'10':'0'}px;padding-bottom:${idx<adminMesasBuf[m.id].length-1?'10':'0'}px;border-bottom:${idx<adminMesasBuf[m.id].length-1?'1px solid #EEE':'none'}">
+          <div style="font-size:9.5px;font-weight:700;color:#bbb;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">${idx===0?'1° Llamado':'2° Llamado'}</div>
+          <div class="admin-mesa-row">
+            <div class="admin-mini-group">
+              <div class="admin-mini-label">Fecha</div>
+              <input class="admin-input-sm" type="text" placeholder="ej: 12/02/2026"
+                value="${escHtml(mx.fecha||'')}"
+                data-matid="${m.id}" data-idx="${idx}" data-field="fecha"
+                oninput="setMesaBuf(this)">
+            </div>
+            <div class="admin-mini-group">
+              <div class="admin-mini-label">Hora</div>
+              <input class="admin-input-sm" type="text" placeholder="ej: 9:00"
+                value="${escHtml(mx.hora||'')}"
+                data-matid="${m.id}" data-idx="${idx}" data-field="hora"
+                oninput="setMesaBuf(this)">
+            </div>
+          </div>
+          <div class="admin-mesa-row">
+            <div class="admin-mini-group">
+              <div class="admin-mini-label">Aula</div>
+              <input class="admin-input-sm" type="text" placeholder="ej: 301"
+                value="${escHtml(mx.aula||'')}"
+                data-matid="${m.id}" data-idx="${idx}" data-field="aula"
+                oninput="setMesaBuf(this)">
+            </div>
+            <div class="admin-mini-group">
+              <div class="admin-mini-label">Turno</div>
+              <input class="admin-input-sm" type="text" placeholder="ej: Feb/Mar"
+                value="${escHtml(mx.turno||'')}"
+                data-matid="${m.id}" data-idx="${idx}" data-field="turno"
+                oninput="setMesaBuf(this)">
+            </div>
+          </div>
+        </div>`;
+      });
+      div.innerHTML=`
+        <div class="admin-mat-name">
+          <span class="admin-mat-badge" style="background:${color}">${m.ref}</span>
+          ${m.label}
+        </div>
+        ${mesasHtml}`;
+      list.appendChild(div);
+    });
+  });
+}
+
+function setMesaBuf(inp){
+  const id=inp.dataset.matid;
+  const idx=+inp.dataset.idx;
+  const field=inp.dataset.field;
+  if(!adminMesasBuf[id]) adminMesasBuf[id]=[{fecha:'',hora:'',aula:'',turno:''},{fecha:'',hora:'',aula:'',turno:''}];
+  adminMesasBuf[id][idx][field]=inp.value;
+}
+window.setMesaBuf=setMesaBuf;
+
+// ── RENDER HORARIOS ──────────────────────────────────────────────────────────
+function renderAdminHorariosList(){
+  const list=document.getElementById('admin-horarios-list');
+  list.innerHTML='';
+  const mats=MAT.filter(m=>m.yr===adminActiveYrHor);
+  [1,2].forEach(sem=>{
+    const semMats=mats.filter(m=>m.sem===sem);
+    if(!semMats.length) return;
+    const secTitle=document.createElement('div');
+    secTitle.className='admin-mesa-section-title';
+    secTitle.textContent=sem===1?'1° Semestre':'2° Semestre';
+    list.appendChild(secTitle);
+    semMats.forEach(m=>{
+      const color=getColor(m);
+      const hor=adminHorBuf[m.id]!==undefined?adminHorBuf[m.id]:{...(HORARIOS[m.id]||{dias:'',horaInicio:'',horaFin:'',aula:''})};
+      if(!adminHorBuf[m.id]) adminHorBuf[m.id]=hor;
+      const div=document.createElement('div');
+      div.className='admin-mesa-item';
+      div.style.borderLeftColor=color;
+      div.innerHTML=`
+        <div class="admin-mat-name">
+          <span class="admin-mat-badge" style="background:${color}">${m.ref}</span>
+          ${m.label}
+        </div>
+        <div class="admin-mesa-row">
+          <div class="admin-mini-group" style="flex:2">
+            <div class="admin-mini-label">Días</div>
+            <input class="admin-input-sm" type="text" placeholder="ej: Lun y Mié"
+              value="${escHtml(hor.dias||'')}"
+              data-matid="${m.id}" data-field="dias"
+              oninput="setHorBuf(this)">
+          </div>
+        </div>
+        <div class="admin-mesa-row">
+          <div class="admin-mini-group">
+            <div class="admin-mini-label">Hora inicio</div>
+            <input class="admin-input-sm" type="text" placeholder="ej: 18:00"
+              value="${escHtml(hor.horaInicio||'')}"
+              data-matid="${m.id}" data-field="horaInicio"
+              oninput="setHorBuf(this)">
+          </div>
+          <div class="admin-mini-group">
+            <div class="admin-mini-label">Hora fin</div>
+            <input class="admin-input-sm" type="text" placeholder="ej: 20:00"
+              value="${escHtml(hor.horaFin||'')}"
+              data-matid="${m.id}" data-field="horaFin"
+              oninput="setHorBuf(this)">
+          </div>
+        </div>
+        <div class="admin-mesa-row">
+          <div class="admin-mini-group">
+            <div class="admin-mini-label">Aula</div>
+            <input class="admin-input-sm" type="text" placeholder="ej: 201"
+              value="${escHtml(hor.aula||'')}"
+              data-matid="${m.id}" data-field="aula"
+              oninput="setHorBuf(this)">
+          </div>
+        </div>`;
+      list.appendChild(div);
+    });
+  });
+}
+
+function setHorBuf(inp){
+  const id=inp.dataset.matid;
+  const field=inp.dataset.field;
+  if(!adminHorBuf[id]) adminHorBuf[id]={dias:'',horaInicio:'',horaFin:'',aula:''};
+  adminHorBuf[id][field]=inp.value;
+}
+window.setHorBuf=setHorBuf;
+
+// ── SAVE ─────────────────────────────────────────────────────────────────────
+async function adminSave(){
+  const btn = document.querySelector('.admin-save-btn');
+  if(btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Guardando…'; }
+
+  // Flush prof buf
+  Object.keys(adminProfBuf).forEach(id=>{
+    const key=isNaN(id)?id:+id;
+    PROF[key]=adminProfBuf[id];
+  });
+  // Flush mesas buf
+  Object.keys(adminMesasBuf).forEach(id=>{
+    const key=isNaN(id)?id:+id;
+    MESAS[key]=adminMesasBuf[id];
+  });
+  // Flush horarios buf
+  Object.keys(adminHorBuf).forEach(id=>{
+    const key=isNaN(id)?id:+id;
+    HORARIOS[key]=adminHorBuf[id];
+  });
+
+  try {
+    await saveStorage();
+    renderYear();
+    showToast('Cambios guardados ✓');
+  } catch(e) {
+    showToast('❌ Error al guardar. Revisá la consola.');
+  } finally {
+    if(btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios'; }
+  }
+}
+window.adminSave=adminSave;
+
+function showToast(msg){
+  const t=document.getElementById('save-toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── HELPER ───────────────────────────────────────────────────────────────────
+function escHtml(str){
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+// Agrega estilo inline para s-card-hor si no existe
+(function(){
+  const st=document.createElement('style');
+  st.textContent='.s-card-hor{font-size:9px;color:#aaa;margin-top:2px;line-height:1.3}';
+  document.head.appendChild(st);
+})();
+
+// loadStorage es async: carga de Supabase y luego llama a buildTabs() + renderYear()
+loadStorage();
+</script>
+</body>
+</html>
+
